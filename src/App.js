@@ -8,7 +8,8 @@ class App extends Component {
   render() {
     return (
       <div className="App">
-        <ResourceNode />
+        <ResourceNode label="node1" />
+        <ResourceNode label="node2" />
       </div>
     );
   }
