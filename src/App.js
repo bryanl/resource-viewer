@@ -2,14 +2,18 @@ import './App.css';
 
 import React, { Component } from 'react';
 
-import { ResourceNode } from './components/node';
+import { DAG } from './components/dag';
 
 class App extends Component {
   render() {
+    const dag = {
+      a: ["b", "c"],
+      b: ["d"]
+    };
+
     return (
       <div className="App">
-        <ResourceNode label="node1" />
-        <ResourceNode label="node2" />
+        <DAG dag={dag} />
       </div>
     );
   }
