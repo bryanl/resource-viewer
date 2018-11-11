@@ -2,9 +2,10 @@ $card-bg: #0f1e82;
 
 $connector-radius: 15px;
 
+$node-width: 200px;
+
 @mixin connector-bottom {
   bottom: -$connector-radius;
-  // box-shadow: 0 0 0 1px #444d56;
   box-shadow: 0 4px 4px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
   @include connector(white);
 }
@@ -36,10 +37,11 @@ $connector-radius: 15px;
 }
 
 div.card {
-  width: 250px;
+  width: $node-width;
   box-shadow: 0 4px 4px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
   text-align: center;
   z-index: 10;
+  margin: 100px;
 }
 
 div.header {
