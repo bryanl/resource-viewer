@@ -1,47 +1,14 @@
 $card-bg: #0f1e82;
 
-$connector-radius: 15px;
-
 $node-width: 200px;
 
-@mixin connector-bottom {
-  bottom: -$connector-radius;
-  box-shadow: 0 4px 4px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
-  @include connector(white);
-}
-
-@mixin connector-top {
-  top: -$connector-radius;
-  @include connector($card-bg);
-}
-
-@mixin connector($background) {
-  background: $background;
-  border-radius: 50%;
-  display: block;
-  height: $connector-radius * 2;
-  left: 50%;
-  margin: 0 0 0 0 -$connector-radius;
-  position: absolute;
-  width: $connector-radius * 2;
-  z-index: -1;
-  content: "";
-}
-
-.card:before {
-  @include connector-top();
-}
-
-.card:after {
-  @include connector-bottom();
-}
 
 div.card {
   width: $node-width;
   box-shadow: 0 4px 4px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
   text-align: center;
   z-index: 10;
-  margin: 100px;
+  position: absolute;
 }
 
 div.header {
@@ -54,4 +21,9 @@ div.header {
 div.container {
   padding: 10px;
   background: white;
+}
+
+.edge {
+  position: absolute;
+  z-index: -1;
 }

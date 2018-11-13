@@ -1,47 +1,87 @@
 import * as React from 'react';
 
-import { ResourceNode } from './node';
+import { NodePosition, Rect, ResourceNode } from './node';
 
 export interface DAGProps {
-  dag: { [key: string]: string[] };
+  dag: { [key: string]: Array<string> };
 }
 
-export class DAG extends React.Component<DAGProps, {}> {
+interface DAGState {
+  childrenPositions: { [key: string]: { [key: string]: Rect } };
+  nodes: { [key: string]: Rect };
+}
+
+export class DAG extends React.Component<DAGProps, DAGState> {
+  private _nodeEdges: { [key: string]: { [key: string]: Rect } } = {};
+
+  constructor(props: DAGProps) {
+    super(props);
+
+    this.state = {
+      childrenPositions: {},
+      nodes: {}
+    };
+
+    for (var key in props.dag) {
+      this._nodeEdges[key] = {};
+    }
+  }
+
+  updatePosition = (label: string, rect: Rect): void => {
+    this.setState(state => {
+      return { nodes: { ...state.nodes, [label]: rect } };
+    });
+  };
+
   render() {
-    const drawn: { [key: string]: boolean } = {};
-    const nodes = [];
-    const nodeSpacing = 250;
-    let childId = 0;
+    const nodePos: { [key: string]: NodePosition } = {};
+    const nodeSpacing = 0;
 
     let xPos = 100;
 
     for (var key in this.props.dag) {
-      if (!drawn[key]) {
-        childId++;
-        nodes.push(
-          <ResourceNode key={childId} label={key} pos={{ x: xPos, y: 100 }} />
-        );
+      if (!nodePos[key]) {
+        nodePos[key] = { x: xPos, y: 100 };
         xPos += nodeSpacing;
-        drawn[key] = true;
       }
 
-      for (var i in this.props.dag[key]) {
-        var label = this.props.dag[key][i];
-        if (!drawn[label]) {
-          childId++;
-          nodes.push(
-            <ResourceNode
-              key={childId}
-              label={label}
-              pos={{ x: xPos, y: 100 }}
-            />
-          );
+      const children = this.props.dag[key];
+      for (let child of children) {
+        if (!nodePos[child]) {
+          nodePos[child] = { x: xPos, y: 100 };
           xPos += nodeSpacing;
-          drawn[label] = true;
         }
       }
+
+      this.state.childrenPositions[key] = {};
     }
 
-    return nodes;
+    const nodes = [];
+    for (var key in nodePos) {
+      const x = nodePos[key].x;
+      const y = nodePos[key].y;
+
+      let edges: NodePosition[] = [];
+
+      if (this.props.dag[key]) {
+        for (var edge of this.props.dag[key]) {
+          edges.push(nodePos[edge]);
+        }
+      }
+
+      nodes.push(
+        <ResourceNode
+          key={key}
+          label={key}
+          pos={{ x: x, y: y }}
+          edges={edges}
+          updatePosition={this.updatePosition}
+          connections={this.props.dag[key]}
+          nodes={this.state.nodes}
+        />
+      );
+    }
+
+    return <div id="dag">{nodes}</div>;
   }
 }
