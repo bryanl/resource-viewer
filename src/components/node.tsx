@@ -11,7 +11,6 @@ export interface NodePosition {
 export interface ResourceNodeProps {
   label: string;
   pos: NodePosition;
-  edges: NodePosition[];
   updatePosition(label: string, pos: Rect | undefined): void;
   nodes: { [key: string]: Rect };
   connections: string[];

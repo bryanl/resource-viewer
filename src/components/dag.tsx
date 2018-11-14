@@ -15,7 +15,7 @@ interface DAGState {
 }
 
 export class DAG extends React.Component<DAGProps, DAGState> {
-  private _nodeEdges: { [key: string]: { [key: string]: Rect } } = {};
+  private _nodeEdge: { [key: string]: NodePosition } = {};
   private _dag = React.createRef<HTMLDivElement>();
 
   constructor(props: DAGProps) {
@@ -26,10 +26,6 @@ export class DAG extends React.Component<DAGProps, DAGState> {
       nodes: {},
       positions: {}
     };
-
-    for (var key in props.dag) {
-      this._nodeEdges[key] = {};
-    }
   }
 
   bounds = (): Rect | undefined => {
@@ -62,6 +58,18 @@ export class DAG extends React.Component<DAGProps, DAGState> {
     };
   };
 
+  initNodePos = (key: string, bounds: Rect) => {
+    let nodePos: NodePosition
+
+    if (!this._nodeEdge[key]) {
+      nodePos = this.randomPositionInRect(bounds)
+    } else {
+      nodePos = this._nodeEdge[key]
+    }
+
+    return nodePos
+  }
+
   componentDidMount() {
     const nodePos: { [key: string]: NodePosition } = {};
     const bounds = this.bounds();
@@ -70,26 +78,11 @@ export class DAG extends React.Component<DAGProps, DAGState> {
       console.log("dag bounds", bounds);
 
       for (var key in this.props.dag) {
-        if (!nodePos[key]) {
-          nodePos[key] = { offsetX: 100, offsetY: 100 };
-
-          // if (bounds) {
-          //   nodePos[key] = this.randomPositionInRect(bounds);
-          // } else {
-          //   nodePos[key] = { x: 0, y: 0 };
-          // }
-        }
+        nodePos[key] = this.initNodePos(key, bounds)
 
         const children = this.props.dag[key];
         for (let child of children) {
-          if (!nodePos[child]) {
-            nodePos[child] = { offsetX: 0, offsetY: 0 };
-            // if (bounds) {
-            //   nodePos[key] = this.randomPositionInRect(bounds);
-            // } else {
-            //   nodePos[child] = { x: 0, y: 0 };
-            // }
-          }
+          nodePos[child] = this.initNodePos(child, bounds)
         }
       }
 
@@ -103,20 +96,11 @@ export class DAG extends React.Component<DAGProps, DAGState> {
       const x = this.state.positions[key].offsetX;
       const y = this.state.positions[key].offsetY;
 
-      let edges: NodePosition[] = [];
-
-      if (this.props.dag[key]) {
-        for (var edge of this.props.dag[key]) {
-          edges.push({ offsetX: 0, offsetY: 0 });
-        }
-      }
-
       nodes.push(
         <ResourceNode
           key={key}
           label={key}
           pos={{ offsetX: x, offsetY: y }}
-          edges={edges}
           updatePosition={this.updatePosition}
           connections={this.props.dag[key]}
           nodes={this.state.nodes}
