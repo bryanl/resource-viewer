@@ -7,9 +7,10 @@ import { DAG } from './components/dag';
 class App extends Component {
   render() {
     const dag = {
-      a: ["b", "c"],
-      b: ["d"],
-      e: ["f"],
+      "ingress": ["service1"],
+      "service1": ["pod1"],
+      "deployment1": ["rs1"],
+      "rs1": ["pod1"],
     };
 
     return (

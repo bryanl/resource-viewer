@@ -15,6 +15,7 @@ interface DAGState {
 
 export class DAG extends React.Component<DAGProps, DAGState> {
   private _nodeEdges: { [key: string]: { [key: string]: Rect } } = {};
+  private _dag = React.createRef<HTMLDivElement>();
 
   constructor(props: DAGProps) {
     super(props);
@@ -29,26 +30,67 @@ export class DAG extends React.Component<DAGProps, DAGState> {
     }
   }
 
+  bounds = (): Rect | undefined => {
+    if (!this._dag.current) {
+      return;
+    }
+
+    const boundingRect = this._dag.current.getBoundingClientRect();
+
+    const rect: Rect = {
+      top: boundingRect.top,
+      left: boundingRect.left,
+      height: boundingRect.height,
+      width: boundingRect.width
+    };
+
+    return rect;
+  };
+
   updatePosition = (label: string, rect: Rect): void => {
     this.setState(state => {
       return { nodes: { ...state.nodes, [label]: rect } };
     });
   };
 
+  randomPositionInRect = (rect: Rect): NodePosition => {
+    return {
+      offsetX: 200 + getRandomInt(0, rect.width - 200),
+      offsetY: 250 + getRandomInt(0, rect.height - 250)
+    };
+  };
+
+  componentDidMount() {
+    const bounds = this.bounds();
+    if (bounds) {
+      console.log("dag bounds", bounds);
+    }
+  }
+
   render() {
     const nodePos: { [key: string]: NodePosition } = {};
-    const nodeSpacing = 0;
 
-
+    const bounds = this.bounds();
     for (var key in this.props.dag) {
       if (!nodePos[key]) {
-        nodePos[key] = { x: 0, y: 0 };
+        nodePos[key] = { offsetX: 100, offsetY: 100 };
+
+        // if (bounds) {
+        //   nodePos[key] = this.randomPositionInRect(bounds);
+        // } else {
+        //   nodePos[key] = { x: 0, y: 0 };
+        // }
       }
 
       const children = this.props.dag[key];
       for (let child of children) {
         if (!nodePos[child]) {
-          nodePos[child] = { x: 0, y: 0 };
+          nodePos[child] = { offsetX: 0, offsetY: 0 };
+          // if (bounds) {
+          //   nodePos[key] = this.randomPositionInRect(bounds);
+          // } else {
+          //   nodePos[child] = { x: 0, y: 0 };
+          // }
         }
       }
 
@@ -57,14 +99,15 @@ export class DAG extends React.Component<DAGProps, DAGState> {
 
     const nodes = [];
     for (var key in nodePos) {
-      const x = nodePos[key].x;
-      const y = nodePos[key].y;
+      const x = nodePos[key].offsetX;
+      const y = nodePos[key].offsetY;
 
       let edges: NodePosition[] = [];
 
       if (this.props.dag[key]) {
         for (var edge of this.props.dag[key]) {
-          edges.push(nodePos[edge]);
+          // edges.push(nodePos[edge]);
+          edges.push({offsetX: 0, offsetY: 0});
         }
       }
 
@@ -72,7 +115,7 @@ export class DAG extends React.Component<DAGProps, DAGState> {
         <ResourceNode
           key={key}
           label={key}
-          pos={{ x: x, y: y }}
+          pos={{ offsetX: x, offsetY: y }}
           edges={edges}
           updatePosition={this.updatePosition}
           connections={this.props.dag[key]}
@@ -81,6 +124,14 @@ export class DAG extends React.Component<DAGProps, DAGState> {
       );
     }
 
-    return <div id="dag">{nodes}</div>;
+    return (
+      <div ref={this._dag} className="dag">
+        {nodes}
+      </div>
+    );
   }
+}
+
+function getRandomInt(min: number, max: number): number {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
 }

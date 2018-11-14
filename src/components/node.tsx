@@ -4,8 +4,8 @@ import * as React from 'react';
 import Draggable, { DraggableData } from 'react-draggable';
 
 export interface NodePosition {
-  x: number;
-  y: number;
+  offsetX: number;
+  offsetY: number;
 }
 
 export interface ResourceNodeProps {
@@ -64,8 +64,8 @@ export class ResourceNode extends React.Component<
         return false;
       }
 
-      rect.top = data.y;
-      rect.left = data.x;
+      rect.top = data.y + this.props.pos.offsetY;
+      rect.left = data.x + this.props.pos.offsetX;
       this.props.updatePosition(this.props.label, rect);
     }
   };
@@ -100,8 +100,8 @@ export class ResourceNode extends React.Component<
 
   render() {
     let cardStyle = {
-      top: this.props.pos.y,
-      left: this.props.pos.x
+      top: this.props.pos.offsetY,
+      left: this.props.pos.offsetX
     };
 
     var edges: JSX.Element[] = [];

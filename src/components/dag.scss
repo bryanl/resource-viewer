@@ -1,3 +1,12 @@
-#dag {
-    height: 1000px;
+.dag {
+    margin: 0 auto;
+    height: 95%;
+    width: 95%;
+    padding: 25px;
+    background-color: #fff;
+    z-index: -10;
+    position: relative;
+
+    flex-grow: 1;
+    display: block;
 }
