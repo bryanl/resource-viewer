@@ -1,3 +1,5 @@
+import './dag.scss';
+
 import * as React from 'react';
 
 import { NodePosition, Rect, ResourceNode } from './node';
@@ -37,19 +39,16 @@ export class DAG extends React.Component<DAGProps, DAGState> {
     const nodePos: { [key: string]: NodePosition } = {};
     const nodeSpacing = 0;
 
-    let xPos = 100;
 
     for (var key in this.props.dag) {
       if (!nodePos[key]) {
-        nodePos[key] = { x: xPos, y: 100 };
-        xPos += nodeSpacing;
+        nodePos[key] = { x: 0, y: 0 };
       }
 
       const children = this.props.dag[key];
       for (let child of children) {
         if (!nodePos[child]) {
-          nodePos[child] = { x: xPos, y: 100 };
-          xPos += nodeSpacing;
+          nodePos[child] = { x: 0, y: 0 };
         }
       }
 

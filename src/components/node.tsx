@@ -39,6 +39,8 @@ export class ResourceNode extends React.Component<
       return undefined;
     }
     const current = this._card.current;
+
+
     const rect = current.getBoundingClientRect();
     const scrollLeft =
       window.pageXOffset ||
@@ -46,6 +48,8 @@ export class ResourceNode extends React.Component<
     const scrollTop =
       window.pageYOffset ||
       (document.documentElement ? document.documentElement.scrollTop : 0);
+
+    console.log("offsets", scrollLeft, scrollTop);
 
     return {
       top: rect.top + scrollTop,
@@ -62,14 +66,14 @@ export class ResourceNode extends React.Component<
         return false;
       }
 
-      rect.top = data.y;
+      rect.top = data.y
       rect.left = data.x;
       this.props.updatePosition(this.props.label, rect);
     }
   };
 
   onStop = (e: Event, data: DraggableData): void | false => {
-    console.log(`moved ${this.props.label} to ${data.x},${data.y}`);
+    console.log(`moved ${this.props.label} to ${data.x},${data.y} - ${data.deltaX},${data.deltaY}`);
 
     this.onDrag(e, data);
   };
@@ -104,10 +108,12 @@ export class ResourceNode extends React.Component<
 
     console.log("rects", r1, r2);
 
+    console.log(`${r1.width} + ${r2.width} + (${r2.left}-(${r1.left}+${r1.width}))`)
+
     const edgeRect: Rect = {
       top: c1CenterY,
       left: r1.left,
-      width: r2.left - r1.left + r2.width - r1.left + r2.width,
+      width: r1.width + r2.width + (r2.left-(r1.left+r1.width)),
       height: r2.height / 2 + r1.height / 2 + (r2.top - (r1.top + r1.height))
     };
 
@@ -133,8 +139,8 @@ export class ResourceNode extends React.Component<
           left: edgeRect.left,
           width: `${edgeRect.width}px`,
           height: `${edgeRect.height}px`,
-          // backgroundColor: "#efefef",
-          // opacity: 0.5,
+          backgroundColor: "#efefef",
+          opacity: 0.5,
         };
 
         const x1 = r1.width / 2 + 8;
@@ -166,7 +172,7 @@ export class ResourceNode extends React.Component<
 
     return (
       <React.Fragment>
-        <Draggable  onDrag={this.onDrag} onStop={this.onStop}>
+        <Draggable bounds="parent" onDrag={this.onDrag} onStop={this.onStop}>
           <div ref={this._card} className="card" style={cardStyle}>
             <div className="header">
               <h2>*</h2>

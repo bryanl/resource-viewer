@@ -6,13 +6,9 @@ import { DAG } from './components/dag';
 
 class App extends Component {
   render() {
-    // const dag = {
-    //   a: ["b", "c"],
-    //   b: ["d"]
-    // };
-
     const dag = {
-      a: ["b", "c"]
+      a: ["b", "c"],
+      b: ["d"]
     };
 
     return (
