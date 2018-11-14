@@ -1,6 +1,6 @@
 $card-bg: #0f1e82;
 
-$node-width: 200px;
+$node-width: 125px;
 
 
 div.card {
@@ -14,8 +14,8 @@ div.card {
 div.header {
   background-color: $card-bg;
   color: white;
-  padding: 10px;
-  font-size: 40px;
+  padding: 5px;
+  font-size: 25px;
 }
 
 div.container {
