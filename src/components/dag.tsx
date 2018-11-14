@@ -2,6 +2,7 @@ import './dag.scss';
 
 import * as React from 'react';
 
+import { ForceDirect } from './force_direct';
 import { NodePosition, Rect, ResourceNode } from './node';
 
 export interface DAGProps {
@@ -54,21 +55,21 @@ export class DAG extends React.Component<DAGProps, DAGState> {
   randomPositionInRect = (rect: Rect): NodePosition => {
     return {
       offsetX: 200 + getRandomInt(0, rect.width - 200),
-      offsetY: 250 + getRandomInt(0, rect.height - 250)
+      offsetY: 220 + getRandomInt(0, rect.height - 250)
     };
   };
 
   initNodePos = (key: string, bounds: Rect) => {
-    let nodePos: NodePosition
+    let nodePos: NodePosition;
 
     if (!this._nodeEdge[key]) {
-      nodePos = this.randomPositionInRect(bounds)
+      nodePos = this.randomPositionInRect(bounds);
     } else {
-      nodePos = this._nodeEdge[key]
+      nodePos = this._nodeEdge[key];
     }
 
-    return nodePos
-  }
+    return nodePos;
+  };
 
   componentDidMount() {
     const nodePos: { [key: string]: NodePosition } = {};
@@ -78,12 +79,35 @@ export class DAG extends React.Component<DAGProps, DAGState> {
       console.log("dag bounds", bounds);
 
       for (var key in this.props.dag) {
-        nodePos[key] = this.initNodePos(key, bounds)
+        nodePos[key] = this.initNodePos(key, bounds);
 
         const children = this.props.dag[key];
         for (let child of children) {
-          nodePos[child] = this.initNodePos(child, bounds)
+          nodePos[child] = this.initNodePos(child, bounds);
         }
+      }
+
+      const cd = new ForceDirect(nodePos);
+      const forces = cd.forces();
+
+      console.log(`forces:`, forces);
+
+      for (const key in forces) {
+        const f = forces[key];
+
+        if (f.magnitude < 0.05) {
+          continue;
+        }
+
+        const newX = f.magnitude * Math.sin(f.direction);
+        const newY = f.magnitude * Math.cos(f.direction);
+
+        if (newX < 0 || newY < 0) {
+          continue;
+        }
+
+        nodePos[key].offsetX = newX;
+        nodePos[key].offsetY = newY;
       }
 
       this.setState({ positions: nodePos });

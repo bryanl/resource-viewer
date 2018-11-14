@@ -71,6 +71,10 @@ export class ResourceNode extends React.Component<
 
   onStop = (e: Event, data: DraggableData): void | false => {
     this.onDrag(e, data);
+
+
+
+    return
   };
 
   componentDidMount() {
