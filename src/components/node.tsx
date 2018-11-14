@@ -48,7 +48,6 @@ export class ResourceNode extends React.Component<
       window.pageYOffset ||
       (document.documentElement ? document.documentElement.scrollTop : 0);
 
-    console.log("offsets", scrollLeft, scrollTop);
 
     return {
       top: rect.top + scrollTop,
@@ -72,12 +71,6 @@ export class ResourceNode extends React.Component<
   };
 
   onStop = (e: Event, data: DraggableData): void | false => {
-    console.log(
-      `moved ${this.props.label} to ${data.x},${data.y} - ${data.deltaX},${
-        data.deltaY
-      }`
-    );
-
     this.onDrag(e, data);
   };
 
@@ -105,26 +98,6 @@ export class ResourceNode extends React.Component<
     return true;
   };
 
-  genEdgeBox = (r1: Rect, r2: Rect): Rect => {
-    const c1CenterY = r1.top + r1.height / 2;
-    const c2CenterY = r2.top + r2.height / 2;
-
-    console.log("rects", r1, r2);
-
-    console.log(
-      `${r1.width} + ${r2.width} + (${r2.left}-(${r1.left}+${r1.width}))`
-    );
-
-    const edgeRect: Rect = {
-      top: c1CenterY,
-      left: r1.left,
-      width: r1.width + r2.width + (r2.left - (r1.left + r1.width)),
-      height: r2.height / 2 + r1.height / 2 + (r2.top - (r1.top + r1.height))
-    };
-
-    return edgeRect;
-  };
-
   render() {
     let cardStyle = {
       top: this.props.pos.y,
@@ -136,28 +109,16 @@ export class ResourceNode extends React.Component<
       for (let connection of this.props.connections) {
         const r1 = this.props.nodes[this.props.label];
         const r2 = this.props.nodes[connection];
-        const edgeRect = this.genEdgeBox(r1, r2);
 
-        console.log("generated", edgeRect);
-        const edgeBoxStyle = {
-          top: edgeRect.top,
-          left: edgeRect.left,
-          width: `${edgeRect.width}px`,
-          height: `${edgeRect.height}px`,
-          backgroundColor: "#efefef",
-          opacity: 0.5
-        };
-
-        const x1 = r1.width / 2 + 8;
-        const y1 = 0;
-        const x2 = edgeRect.width - r2.width / 2;
-        const y2 = edgeRect.height;
+        const connector = new Connector(r1, r2);
+        const boundingBox = connector.boundingBox();
+        const connectorStyle = connector.style()
 
         edges.push(
-          <div key={connection} className="edge" style={edgeBoxStyle}>
-            <svg viewBox={`0 0 ${edgeRect.width} ${edgeRect.height}`}>
+          <div key={connection} className="edge" style={connectorStyle}>
+            <svg viewBox={`0 0 ${boundingBox.width} ${boundingBox.height}`}>
               <path
-                d={`M${x1},${y1} C${x1},${y2} ${x2},${y1} ${x2},${y2}`}
+                d={connector.line()}
                 fill="transparent"
                 stroke="grey"
                 strokeWidth="4"
@@ -191,5 +152,72 @@ export class ResourceNode extends React.Component<
         {edges}
       </React.Fragment>
     );
+  }
+}
+
+export class Connector {
+  constructor(private r1: Rect, private r2: Rect) {}
+
+  boundingBox(): Rect {
+    const r1 = this.r1;
+    const r2 = this.r2;
+
+    const c1CenterY = r1.top + r1.height / 2;
+
+    let top = c1CenterY;
+    let left = r1.left;
+    let width = r1.width + r2.width + (r2.left - (r1.left + r1.width));
+    let height =
+      r2.height / 2 + r1.height / 2 + (r2.top - (r1.top + r1.height));
+
+    if (r2.top < r1.top) {
+      top = r2.top + r2.height / 2;
+      height = r1.top + r1.height / 2 - top;
+    }
+
+    if (r2.left < r1.left) {
+      left = r2.left;
+      width = r2.width + r1.width + (r1.left - (r2.left + r2.width));
+    }
+
+    return {
+      top: top,
+      left: left,
+      width: width,
+      height: height
+    };
+  }
+
+  line(): string {
+    const boundingBox = this.boundingBox();
+
+    let x1 = this.r1.width / 2 + 8;
+    let y1 = 0;
+    let x2 = boundingBox.width - this.r2.width / 2;
+    let y2 = boundingBox.height;
+
+    if (this.r2.left < this.r1.left) {
+      let temp = x1;
+      x1 = x2;
+      x2 = temp;
+    }
+
+    if (this.r2.top < this.r1.top) {
+      let temp = y1;
+      y1 = y2;
+      y2 = temp;
+    }
+
+    return `M${x1},${y1} C${x1},${y2} ${x2},${y1} ${x2},${y2}`;
+  }
+
+  style(): any {
+    const boundingBox = this.boundingBox();
+    return {
+      top: boundingBox.top,
+      left: boundingBox.left,
+      width: `${boundingBox.width}px`,
+      height: `${boundingBox.height}px`
+    };
   }
 }

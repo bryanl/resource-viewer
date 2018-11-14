@@ -8,7 +8,8 @@ class App extends Component {
   render() {
     const dag = {
       a: ["b", "c"],
-      b: ["d"]
+      b: ["d"],
+      e: ["f"],
     };
 
     return (
