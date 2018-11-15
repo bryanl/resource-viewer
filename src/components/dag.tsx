@@ -3,10 +3,12 @@ import './dag.scss';
 import * as React from 'react';
 
 import { ForceDirect } from './force_direct';
-import { NodePosition, Rect, ResourceNode } from './node';
+import { NodePosition, NodePositions, Rect, ResourceNode } from './node';
+
+export type RelationshipMap = { [key: string]: string[] };
 
 export interface DAGProps {
-  dag: { [key: string]: Array<string> };
+  dag: RelationshipMap;
 }
 
 interface DAGState {
@@ -71,43 +73,81 @@ export class DAG extends React.Component<DAGProps, DAGState> {
     return nodePos;
   };
 
+  isOverlap = (p1: NodePosition, p2: NodePosition): boolean => {
+    return !(
+      p2.offsetX > p1.offsetX + 150 ||
+      p2.offsetX + 150 < p1.offsetX ||
+      p2.offsetY > p1.offsetY + 260 ||
+      p2.offsetY + 260 < p1.offsetY
+    );
+  };
+
+  checkOverlap = (pos1: NodePosition, positions: NodePositions): boolean => {
+    for (const key in positions) {
+      const pos2 = positions[key];
+      if (this.isOverlap(pos1, pos2)) {
+        return true;
+      }
+    }
+
+    return false;
+  };
+
   componentDidMount() {
-    const nodePos: { [key: string]: NodePosition } = {};
+    const nodePos: NodePositions = {};
     const bounds = this.bounds();
 
     if (bounds) {
       console.log("dag bounds", bounds);
 
       for (var key in this.props.dag) {
-        nodePos[key] = this.initNodePos(key, bounds);
-
+        let newPos = this.initNodePos(key, bounds);
+        while (this.checkOverlap(newPos, nodePos)) {
+          newPos = this.initNodePos(key, bounds);
+        }
+        nodePos[key] = newPos;
         const children = this.props.dag[key];
         for (let child of children) {
-          nodePos[child] = this.initNodePos(child, bounds);
+          newPos = this.initNodePos(child, bounds);
+          while (this.checkOverlap(newPos, nodePos)) {
+            newPos = this.initNodePos(key, bounds);
+          }
+          nodePos[child] = newPos;
         }
       }
 
-      const cd = new ForceDirect(nodePos);
-      const forces = cd.forces();
+      let moves = 1e5;
+      while (moves > 0) {
+        moves--;
+        const cd = new ForceDirect(this.props.dag, nodePos);
+        const forces = cd.forces();
 
-      console.log(`forces:`, forces);
+        for (const key in forces) {
+          const f = forces[key];
 
-      for (const key in forces) {
-        const f = forces[key];
+          const deltaX = Math.cos((f.angle * Math.PI) / 180) / f.magnitude;
+          const deltaY = Math.sin((f.angle * Math.PI) / 180) / f.magnitude;
 
-        if (f.magnitude < 0.05) {
-          continue;
+          let newX = nodePos[key].offsetX - deltaX;
+          let newY = nodePos[key].offsetY - deltaY;
+
+          if (
+            newX < bounds.left + 20 ||
+            newX > bounds.left + bounds.width - 20
+          ) {
+            newX = -newX;
+          }
+          if (
+            newY < bounds.top - 10 ||
+            newY > bounds.top + bounds.height - 400
+          ) {
+            newY = -newY;
+          }
+
+          nodePos[key].offsetX = newX;
+          nodePos[key].offsetY = newY;
         }
 
-        const newX = f.magnitude * Math.sin(f.direction);
-        const newY = f.magnitude * Math.cos(f.direction);
-
-        if (newX < 0 || newY < 0) {
-          continue;
-        }
-
-        nodePos[key].offsetX = newX;
-        nodePos[key].offsetY = newY;
       }
 
       this.setState({ positions: nodePos });

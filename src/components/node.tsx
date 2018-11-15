@@ -3,6 +3,8 @@ import './node.scss';
 import * as React from 'react';
 import Draggable, { DraggableData } from 'react-draggable';
 
+export type NodePositions = { [key: string]: NodePosition };
+
 export interface NodePosition {
   offsetX: number;
   offsetY: number;

@@ -1,16 +1,18 @@
-import { NodePosition } from './node';
+import { RelationshipMap } from './dag';
+import { NodePositions } from './node';
 
-type Vector = {
+export type Vector = {
   magnitude: number;
-  direction: number;
+  angle: number;
 };
 
-type Forces = { [key: string]: Vector };
+export type Forces = { [key: string]: Vector };
 
 export class ForceDirect {
-  constructor(private positions: { [key: string]: NodePosition }) {
-    console.log("force direct: ", positions);
-  }
+  constructor(
+    public relationshipMap: RelationshipMap,
+    public positions: NodePositions
+  ) {}
 
   angle(n1: string, n2: string): number {
     const pos1 = this.positions[n1];
@@ -21,7 +23,7 @@ export class ForceDirect {
         180) /
       Math.PI;
 
-    return 180 - a;
+    return a;
   }
 
   distance(n1: string, n2: string): number {
@@ -55,26 +57,58 @@ export class ForceDirect {
 
       const angle = this.angle(k1, k2);
       const distance = this.distance(k1, k2);
-      const force = 1 - distance / 500;
+
+      const k = 1000000;
+      const q = 2e5;
+      const q1 = q;
+      const q2 = this.isConnected(k1, k2) ? -q : q;
+      const force = k * ((q1 * q2) / (distance * distance));
 
       // calculate triangle adjacent, opposite
-      const adjacent = Math.sin(angle) * force;
-      x += adjacent;
+      const adjacent = Math.sin((angle * Math.PI) / 180) * force;
+      x -= adjacent;
 
-      const opposite = Math.cos(angle) * force;
-      y += opposite;
+      const opposite = Math.cos((angle * Math.PI) / 180) * force;
+      y -= opposite;
     }
 
-    const theta1 = Math.atan(x / y);
-    const theta2 = 90 - theta1;
+    const theta1 = (Math.atan(x / y) * 180) / Math.PI;
+    const theta2 = 90 - Math.abs(theta1);
 
-    const magnitude = Math.sqrt(x * x + y * y);
-
-    // console.log(`force: ${magnitude}, direction: ${theta2}`);
+    let magnitude = Math.sqrt(x * x + y * y);
+    if (theta1 < 0) {
+      magnitude = -magnitude;
+    }
 
     return {
       magnitude: magnitude,
-      direction: theta2
+      angle: theta2
     };
   }
+
+  isConnected(k1: string, k2: string): boolean {
+    if (hasNode(this.relationshipMap, k1)) {
+      if (this.relationshipMap[k1].includes(k2)) {
+        return true;
+      }
+    }
+
+    if (hasNode(this.relationshipMap, k2)) {
+      if (this.relationshipMap[k2].includes(k1)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+}
+
+function hasNode(relationshipMap: RelationshipMap, node: string): boolean {
+  for (const key in relationshipMap) {
+    if (key == node) {
+      return true;
+    }
+  }
+
+  return false;
 }
